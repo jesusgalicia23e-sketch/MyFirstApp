@@ -5,6 +5,7 @@
 
 package com.example.myfirstapp.presentation
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
@@ -42,7 +43,9 @@ class MainActivity : ComponentActivity() {
         val button: Button =findViewById(R.id.button)
 
         button.setOnClickListener {
-            Toast.makeText(context, "Alerta", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(context, "Alerta", Toast.LENGTH_SHORT).show()
+            val intent= Intent(this@MainActivity, OtraVentana::class.java)
+            startActivity(intent)
         }
     }
 
