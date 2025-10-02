@@ -8,6 +8,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle;
+import android.util.Log
 import androidx.activity.ComponentActivity;
 import androidx.core.app.ActivityCompat
 import com.example.myfirstapp.R;
@@ -23,6 +24,7 @@ abstract class OtraVentana: ComponentActivity(), SensorEventListener {
         sensorManager=getSystemService(Context.SENSOR_SERVICE) as SensorManager
         sensor= sensorManager.getDefaultSensor(sensorType)
         setContentView(R.layout.otra_ventana)
+        startSensor()
     }
 
     private fun startSensor(){
@@ -39,7 +41,20 @@ abstract class OtraVentana: ComponentActivity(), SensorEventListener {
 
     }
 
-    override fun onSensorChanged(p0: SensorEvent?) {
+    override fun onSensorChanged(event: SensorEvent?) {
+        if(event?.sensor?.type==sensorType){
+            val lectura=event.values[0]
+            Log.d("onSensorChange", "Lectura: ${lectura}")
+        }
+    }
 
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        sensor.also { pressure->sensorManager.registerListener(this, pressure, SensorManager.SENSOR_DELAY_NORMAL) }
     }
 }
