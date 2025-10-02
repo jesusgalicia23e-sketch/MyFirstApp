@@ -69,7 +69,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".presentation.OtraVentana">
+        <activity android:name=".presentation.OtraVentana"
+            android:taskAffinity="">
         </activity>
     </application>
 
