@@ -21,7 +21,7 @@ abstract class OtraVentana: ComponentActivity(), SensorEventListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sensorManager=getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        sensor= SensorManager.getDefaultSensor(sensorType)
+        sensor= sensorManager.getDefaultSensor(sensorType)
         setContentView(R.layout.otra_ventana)
     }
 
