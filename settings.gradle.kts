@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "MyFirstApp"
 include(":app")
+include(":appwearos")
