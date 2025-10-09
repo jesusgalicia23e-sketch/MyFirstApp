@@ -7,6 +7,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
@@ -14,12 +15,29 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.example.myfirstapp.R
+import com.google.android.gms.tasks.Tasks
+import com.google.android.gms.wearable.CapabilityClient
+import com.google.android.gms.wearable.CapabilityInfo
+import com.google.android.gms.wearable.DataClient
+import com.google.android.gms.wearable.DataEventBuffer
+import com.google.android.gms.wearable.MessageClient
+import com.google.android.gms.wearable.MessageEvent
+import com.google.android.gms.wearable.Wearable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import java.nio.charset.StandardCharsets
 
-class OtraVentana : ComponentActivity(), SensorEventListener {
+class OtraVentana : ComponentActivity(), SensorEventListener, DataClient.OnDataChangedListener, MessageClient.OnMessageReceivedListener,
+    CapabilityClient.OnCapabilityChangedListener, CoroutineScope by MainScope() {
 
     private lateinit var sensorManager: SensorManager
     private var heartRateSensor: Sensor? = null
     private val sensorType = Sensor.TYPE_HEART_RATE
+    var activityContext: Context?=null
+    private val PAYLOAD_PATH = "/APP_OPEN"
+    lateinit var nodeID: String
 
     private lateinit var heartRateTextView: TextView
 
@@ -27,8 +45,6 @@ class OtraVentana : ComponentActivity(), SensorEventListener {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) {
                 Log.d("PERMISOS", "Permiso BODY_SENSORS concedido.")
-                // Si se concede el permiso, onResume() se encargará de registrar el sensor.
-                // No es necesario llamar a startSensor() aquí directamente para evitar duplicados.
             } else {
                 Log.d("PERMISOS", "Permiso BODY_SENSORS denegado.")
                 heartRateTextView.text = "Permiso denegado"
@@ -38,6 +54,7 @@ class OtraVentana : ComponentActivity(), SensorEventListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.otra_ventana)
+        activityContext=this
 
         heartRateTextView = findViewById(R.id.ritmo_cardiaco)
 
@@ -48,6 +65,13 @@ class OtraVentana : ComponentActivity(), SensorEventListener {
             Log.e("SensorError", "El dispositivo no tiene sensor de ritmo cardíaco.")
             heartRateTextView.text = "No disponible"
         }
+    }
+
+    private fun sendMessage() {
+        val sendMessageResult = Wearable.getMessageClient(activityContext!!)
+            .sendMessage(nodeID, PAYLOAD_PATH, "hola mundo".toByteArray())
+            .addOnSuccessListener { Log.d("sendMessage", "Mensaje enviado correctamente") }
+            .addOnFailureListener { exception -> Log.d("sendMessage", "Error al enviar el mensaje ${exception.toString()}") }
     }
 
     private fun startSensor() {
@@ -61,31 +85,28 @@ class OtraVentana : ComponentActivity(), SensorEventListener {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-
-        if (heartRateSensor == null) {
-            return
-        }
-
-        when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BODY_SENSORS
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                Log.d("Sensor", "El permiso ya estaba concedido. Registrando listener.")
-                startSensor()
-            }
-            else -> {
-                requestPermissionLauncher.launch(Manifest.permission.BODY_SENSORS)
-            }
-        }
-    }
 
     override fun onPause() {
         super.onPause()
-        sensorManager.unregisterListener(this)
-        Log.d("Sensor", "Listener del sensor des-registrado.")
+        try {
+            Wearable.getDataClient(activityContext!!).removeListener(this)
+            Wearable.getMessageClient(activityContext!!).removeListener(this)
+            Wearable.getCapabilityClient(activityContext!!).removeListener(this)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        try {
+            Wearable.getDataClient(activityContext!!).addListener(this)
+            Wearable.getMessageClient(activityContext!!).addListener(this)
+            Wearable.getCapabilityClient(activityContext!!).addListener(this, Uri.parse("wear://"),
+                CapabilityClient.FILTER_REACHABLE)
+        }catch (e: Exception){
+
+        }
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -100,5 +121,19 @@ class OtraVentana : ComponentActivity(), SensorEventListener {
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
         Log.d("SensorAccuracy", "Precisión del sensor cambió a: $accuracy")
+    }
+
+    override fun onDataChanged(p0: DataEventBuffer) {
+    }
+
+    override fun onMessageReceived(ME: MessageEvent) {
+        Log.d("onMessageReceived", ME.toString())
+        Log.d("onMessageReceived", "ID del nodo: ${ME.sourceNodeId}")
+        Log.d("onMessageReceived", "Payload: ${ME.path}")
+        val message=String(ME.data, StandardCharsets.UTF_8)
+        Log.d("onMessageReceived", "Mensaje: ${message}")
+    }
+
+    override fun onCapabilityChanged(p0: CapabilityInfo) {
     }
 }

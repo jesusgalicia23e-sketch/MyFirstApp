@@ -1,6 +1,8 @@
 package com.example.myfirstapp
 
+import android.app.Activity
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -29,6 +31,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.nio.charset.StandardCharsets
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(), DataClient.OnDataChangedListener, MessageClient.OnMessageReceivedListener,
 CapabilityClient.OnCapabilityChangedListener{
@@ -46,7 +49,8 @@ CapabilityClient.OnCapabilityChangedListener{
 
         conectar.setOnClickListener {
             if (!deviceConnected){
-
+                val tempAct: Activity=activityContext as MainActivity
+                getNodes(tempAct)
             }
         }
     }
@@ -68,12 +72,39 @@ CapabilityClient.OnCapabilityChangedListener{
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        try {
+            Wearable.getDataClient(activityContext!!).removeListener(this)
+            Wearable.getMessageClient(activityContext!!).removeListener(this)
+            Wearable.getCapabilityClient(activityContext!!).removeListener(this)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        try {
+            Wearable.getDataClient(activityContext!!).addListener(this)
+            Wearable.getMessageClient(activityContext!!).addListener(this)
+            Wearable.getCapabilityClient(activityContext!!).addListener(this, Uri.parse("wear://"),
+                CapabilityClient.FILTER_REACHABLE)
+        }catch (e: Exception){
+
+        }
+    }
+
     override fun onDataChanged(p0: DataEventBuffer) {
 
     }
 
-    override fun onMessageReceived(p0: MessageEvent) {
-
+    override fun onMessageReceived(ME: MessageEvent) {
+        Log.d("onMessageReceived", ME.toString())
+        Log.d("onMessageReceived", "ID del nodo: ${ME.sourceNodeId}")
+        Log.d("onMessageReceived", "Payload: ${ME.path}")
+        val message=String(ME.data, StandardCharsets.UTF_8)
+        Log.d("onMessageReceived", "Mensaje: ${message}")
     }
 
     override fun onCapabilityChanged(p0: CapabilityInfo) {

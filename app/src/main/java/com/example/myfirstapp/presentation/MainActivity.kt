@@ -28,10 +28,18 @@ import androidx.wear.compose.material.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.myfirstapp.R
 import com.example.myfirstapp.presentation.theme.MyFirstAppTheme
+import com.google.android.gms.wearable.CapabilityClient
+import com.google.android.gms.wearable.CapabilityInfo
+import com.google.android.gms.wearable.DataClient
+import com.google.android.gms.wearable.DataEventBuffer
+import com.google.android.gms.wearable.MessageClient
+import com.google.android.gms.wearable.MessageEvent
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.CoroutineScope
 
 
-
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener, MessageClient.OnMessageReceivedListener,
+CapabilityClient.OnCapabilityChangedListener, CoroutineScope by MainScope() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
 
@@ -47,6 +55,7 @@ class MainActivity : ComponentActivity() {
             val intent= Intent(this@MainActivity, OtraVentana::class.java)
             startActivity(intent)
         }
+
     }
 
     @Composable
@@ -78,6 +87,15 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun DefaultPreview() {
         WearApp("Preview Android")
+    }
+
+    override fun onMessageReceived(p0: MessageEvent) {
+    }
+
+    override fun onDataChanged(p0: DataEventBuffer) {
+    }
+
+    override fun onCapabilityChanged(p0: CapabilityInfo) {
     }
 }
 
