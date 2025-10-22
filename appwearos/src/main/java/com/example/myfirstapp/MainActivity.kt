@@ -31,11 +31,17 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.Call
 import java.nio.charset.StandardCharsets
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import java.io.IOException
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(), DataClient.OnDataChangedListener, MessageClient.OnMessageReceivedListener,
 CapabilityClient.OnCapabilityChangedListener{
     lateinit var conectar: Button
+    val connect: Button = findViewById(R.id.connect)
     var activityContext: Context?=null
     private var deviceConnected: Boolean=false
     private val PAYLOAD_PATH = "/APP_OPEN"
@@ -47,6 +53,10 @@ CapabilityClient.OnCapabilityChangedListener{
         activityContext=this
         conectar=findViewById(R.id.button)
 
+        connect.setOnClickListener {
+            get("https://wwww.inegi.org.mx/app/api/indicadores/desarrolladores/jsonxml/INDICATOR/6207061361/es/00/true/BISE/2.0/508b1850-b896-8f7f-8d27-ab1f659e98e0?type=json")
+        }
+
         conectar.setOnClickListener {
             if (!deviceConnected){
                 val tempAct: Activity=activityContext as MainActivity
@@ -54,7 +64,27 @@ CapabilityClient.OnCapabilityChangedListener{
             }
         }
     }
+    fun get(url: String){
+        val client = OkHttpClient();
+        val request = Request.Builder().url(url).build();
 
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.d("FETCH", "Respuesta: ${e.message}")
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                response.use {
+                    if (response.isSuccessful) {
+                        val responseData = response.body?.toString()
+                        Log.d("FETCH", "Respuesta: $responseData")
+                    } else {
+                        Log.d("Fetch", "Error en la respuesta: ${response.code}")
+                    }
+                }
+            }
+        })
+    }
     private fun getNodes(context: Context){
         launch(Dispatchers.Default){
             val nodeList= Wearable.getNodeClient(context).connectedNodes
