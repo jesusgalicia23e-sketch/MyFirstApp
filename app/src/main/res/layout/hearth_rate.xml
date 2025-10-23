@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
@@ -6,29 +6,27 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/rc"
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/texto"
         android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
         android:text="Ritmo Cardiaco"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-    />
-
-
-    <Button
-        android:id="@+id/vel"
-        android:layout_width="wrap_content"
+        />
+    <TextView
+        android:id="@+id/ritmo_cardiaco"
         android:layout_height="wrap_content"
-        android:text="Velocidad"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="-- BPM"
+        android:textSize="34sp"
+        app:layout_constraintTop_toBottomOf="@+id/texto"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginBottom="80dp"
         />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

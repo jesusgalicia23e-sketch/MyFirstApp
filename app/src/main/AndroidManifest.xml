@@ -69,9 +69,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".presentation.OtraVentana"
+        <activity android:name=".presentation.HearthRate"
             android:taskAffinity="">
         </activity>
+        <activity android:name="com.example.myfirstapp.presentation.OtraVentana" />
+        <activity android:name=".presentation.Veloccimeter"/>
     </application>
 
 </manifest>
