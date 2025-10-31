@@ -13,34 +13,30 @@ import com.example.myfirstapp.R
 import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
 
-
-class Veloccimeter : ComponentActivity(), SensorEventListener {
+class Gyroscope : ComponentActivity(), SensorEventListener {
 
     private lateinit var sensorManager: SensorManager
-    private var accelerometer: Sensor? = null
-    private val sensorType = Sensor.TYPE_ACCELEROMETER
-
-    private lateinit var veloccimeterTextView: TextView
-
+    private var gyroscopeSensor: Sensor? = null
+    private val sensorType = Sensor.TYPE_GYROSCOPE
+    private lateinit var gyroscopeTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.veloccimeter)
-
-        veloccimeterTextView = findViewById(R.id.vel)
+        setContentView(R.layout.gyroscope)
+        gyroscopeTextView = findViewById(R.id.gyr)
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        accelerometer = sensorManager.getDefaultSensor(sensorType)
+        gyroscopeSensor = sensorManager.getDefaultSensor(sensorType)
 
-        if (accelerometer == null) {
-            Log.e("SensorError", "El dispositivo no cuenta con acelerómetro")
-            veloccimeterTextView.text = "Sensor no disponible"
+        if (gyroscopeSensor == null) {
+            Log.e("SensorError", "El dispositivo no cuenta con giroscopio.")
+            gyroscopeTextView.text = "Sensor no disponible"
         }
     }
 
     override fun onResume() {
         super.onResume()
-        accelerometer?.let {
+        gyroscopeSensor?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
         }
     }
@@ -50,9 +46,6 @@ class Veloccimeter : ComponentActivity(), SensorEventListener {
         sensorManager.unregisterListener(this)
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-    }
-
     override fun onSensorChanged(event: SensorEvent?) {
         if (event?.sensor?.type == sensorType) {
             val xAxis = event.values[0]
@@ -60,19 +53,13 @@ class Veloccimeter : ComponentActivity(), SensorEventListener {
             val zAxis = event.values[2]
 
             runOnUiThread {
-                veloccimeterTextView.text = "X: %.2f\nY: %.2f\nZ: %.2f".format(xAxis, yAxis, zAxis)
-            }
-            val magnitude = kotlin.math.sqrt(xAxis * xAxis + yAxis * yAxis + zAxis * zAxis)
-            val FALL_THRESHOLD = 25.0
-
-            if (magnitude > FALL_THRESHOLD){
-                Log.w("ALERTA", "POSIBLE CAÍDA DETECTADA Magnitud: $magnitude")
+                gyroscopeTextView.text = "X: %.2f rad/s\nY: %.2f rad/s\nZ: %.2f rad/s".format(xAxis, yAxis, zAxis)
             }
 
-            val dataString = magnitude.toString()
+            val dataString = "$xAxis,$yAxis,$zAxis"
             val dataBytes = dataString.toByteArray()
 
-            sendSensorData("/velocimeter", dataBytes)
+            sendSensorData("/gyroscope", dataBytes)
         }
     }
 
@@ -86,13 +73,15 @@ class Veloccimeter : ComponentActivity(), SensorEventListener {
             val putDataTask = Wearable.getDataClient(this).putDataItem(putDataRequest)
 
             putDataTask.addOnSuccessListener {
-                Log.d("DataTransfer", "Datos de acelerómetro enviados con éxito: ${it.uri}")
+                Log.d("DataTransfer", "Datos de giroscopio enviados con éxito: ${it.uri}")
             }
             putDataTask.addOnFailureListener { e ->
-                Log.e("DataTransfer", "Error al enviar datos de acelerómetro", e)
+                Log.e("DataTransfer", "Error al enviar datos de giroscopio", e)
             }
         } catch (e: Exception) {
             Log.e("DataTransfer", "Excepción al intentar enviar datos", e)
         }
     }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 }

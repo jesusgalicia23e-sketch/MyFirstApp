@@ -63,4 +63,5 @@ dependencies {
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
     debugImplementation(libs.tiles.tooling)
+    implementation("com.google.android.gms:play-services-wearable:18.2.0")
 }
