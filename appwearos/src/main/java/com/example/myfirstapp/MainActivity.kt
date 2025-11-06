@@ -20,6 +20,9 @@ import okhttp3.Request
 import okhttp3.Response
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
+import com.google.gson.Gson
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(), DataClient.OnDataChangedListener {
 
@@ -71,6 +74,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(), DataCli
                             runOnUiThread {
                                 accelerometerDataTextView.text = "Caída (Magnitud): $formattedMagnitude"
                             }
+                            val dataToSend = mapOf("magnitude" to (magnitudeStr.toFloatOrNull() ?: 0.0f))
+                            sendDataToApi("accelerometer", dataToSend)
                         }
                         GYROSCOPE_DATA_PATH -> {
                             val gyroData = String(data, StandardCharsets.UTF_8)
@@ -78,6 +83,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(), DataCli
 
                             runOnUiThread {
                                 gyroscopeDataTextView.text = "Giroscopio (X,Y,Z): $gyroData"
+                            }
+                            val values = gyroData.split(",").map { it.trim() }
+                            if (values.size == 3) {
+                                val dataToSend = mapOf(
+                                    "x" to (values[0].toFloatOrNull() ?: 0.0f),
+                                    "y" to (values[1].toFloatOrNull() ?: 0.0f),
+                                    "z" to (values[2].toFloatOrNull() ?: 0.0f)
+                                )
+                                sendDataToApi("gyroscope", dataToSend)
                             }
                         }
                     }
@@ -126,6 +140,41 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope(), DataCli
             }
         }
     }
+
+    private fun sendDataToApi(sensorType: String, values: Map<String, Any>) {
+        val apiUrl = "https://apiwearos-production.up.railway.app/api/sensordata"
+        val client = OkHttpClient()
+        val gson = Gson()
+
+        val jsonData = mapOf(
+            "type" to sensorType,
+            "values" to values
+        )
+        val jsonString = gson.toJson(jsonData)
+
+        val requestBody = jsonString.toRequestBody("application/json; charset=utf-8".toMediaType())
+
+        val request = Request.Builder()
+            .url(apiUrl)
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("API_SEND", "Fallo al enviar datos a la API: ${e.message}", e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    Log.d("API_SEND", "Datos enviados a la API con éxito: ${response.body?.string()}")
+                } else {
+                    Log.e("API_SEND", "Error de la API: ${response.code} - ${response.body?.string()}")
+                }
+                response.close()
+            }
+        })
+    }
+
 
     fun get(url: String) {
         val client = OkHttpClient()

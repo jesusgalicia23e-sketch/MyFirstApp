@@ -36,6 +36,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.CoroutineScope
 
 
+
 class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener, MessageClient.OnMessageReceivedListener,
 CapabilityClient.OnCapabilityChangedListener, CoroutineScope by MainScope() {
     override fun onCreate(savedInstanceState: Bundle?) {
